@@ -3,6 +3,7 @@ package cn.llyong.rpc.server;
 import cn.llyong.rpc.common.exception.RpcException;
 import cn.llyong.rpc.common.handler.ServerMarshallingHandler;
 import cn.llyong.rpc.common.helper.IpHelper;
+import cn.llyong.rpc.server.handler.RpcRequestHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -63,7 +64,8 @@ public class RpcServerRunner implements InitializingBean, DisposableBean {
                     protected void initChannel(SocketChannel channel) throws Exception {
                         ChannelPipeline pipeline = channel.pipeline();
                         pipeline.addLast(new IdleStateHandler(0, 0, 60));
-                        pipeline.addLast(new ServerMarshallingHandler());
+//                        pipeline.addLast(new ServerMarshallingHandler());
+                        pipeline.addLast(new RpcRequestHandler());
                     }
                 });
         try {

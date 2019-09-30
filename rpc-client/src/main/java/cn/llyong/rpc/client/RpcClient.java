@@ -1,14 +1,12 @@
 package cn.llyong.rpc.client;
 
+import cn.llyong.rpc.client.connection.ChannelConnectionPool;
+import cn.llyong.rpc.client.handler.RpcResponseHandler;
 import cn.llyong.rpc.common.bo.RpcRequest;
 import cn.llyong.rpc.common.bo.RpcResponse;
 import cn.llyong.rpc.common.exception.RpcException;
-import cn.llyong.rpc.common.handler.ClientMarshallingHandler;
 import cn.llyong.rpc.register.zookeeper.RpcDiscovery;
-import cn.llyong.rpc.netty.connect.ChannelConnectionPool;
-import com.alibaba.fastjson.JSON;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -21,10 +19,10 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.List;
+import java.util.concurrent.SynchronousQueue;
 
 /**
  * Created with IntelliJ IDEA.
@@ -45,6 +43,9 @@ public class RpcClient {
     @Autowired
     private ChannelConnectionPool channelConnectionPool;
 
+    @Autowired
+    private RpcResponseHandler rpcResponseHandler;
+
     private EventLoopGroup group;
     private Bootstrap bootstrap;
 
@@ -64,7 +65,8 @@ public class RpcClient {
                         pipeline.addLast(new IdleStateHandler(0, 0, 30));
 //                        pipeline.addLast(new JSONEncoder());
 //                        pipeline.addLast(new JSONDecoder());
-                        pipeline.addLast(new ClientMarshallingHandler());
+//                        pipeline.addLast(new ClientMarshallingHandler());
+                        pipeline.addLast(new RpcResponseHandler());
                     }
                 });
     }
@@ -76,7 +78,7 @@ public class RpcClient {
     }
 
     @PostConstruct
-    public RpcResponse execute(RpcRequest request, String serverId) throws RpcException, UnsupportedEncodingException {
+    public RpcResponse execute(RpcRequest request, String serverId) throws RpcException, InterruptedException {
         List<String> list = rpcDiscovery.getAvailable(serverId);
         if (CollectionUtils.isEmpty(list)) {
             throw new RpcException("没有发现【"+ serverId +"】可用的服务");
@@ -84,10 +86,9 @@ public class RpcClient {
         String[] split = list.get(0).split("|");
         InetSocketAddress address = new InetSocketAddress(split[0], Integer.parseInt(split[1]));
         Channel channel = channelConnectionPool.getChannel(address);
-        String jsonString = JSON.toJSONString(request);
-        channel.writeAndFlush(Unpooled.copiedBuffer(jsonString.getBytes("UTF-8")));
-//        connect(address);
-        return new RpcResponse();
+        SynchronousQueue<Object> queue = rpcResponseHandler.send(request, channel);
+        RpcResponse response = (RpcResponse) (queue.take());
+        return response;
     }
 
     @PreDestroy
