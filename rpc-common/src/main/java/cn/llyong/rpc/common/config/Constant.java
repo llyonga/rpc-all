@@ -1,4 +1,4 @@
-package cn.llyong.rpc.config;
+package cn.llyong.rpc.common.config;
 
 /**
  * @description: 常量接口
@@ -20,4 +20,12 @@ public interface Constant {
      * zookeeper地址
      */
     String ADDRESS = "127.0.0.1:2181";
+
+    /**
+     * rpc调用错误代码
+     */
+    int ERROR_CODE_404 = 404;
+    int ERROR_CODE_200 = 200;
+    int ERROR_CODE_500 = 500;
+
 }

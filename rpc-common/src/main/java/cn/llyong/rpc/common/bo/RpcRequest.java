@@ -1,8 +1,7 @@
-package cn.llyong.rpc.bo;
+package cn.llyong.rpc.common.bo;
 
 import lombok.Builder;
 import lombok.Data;
-import lombok.ToString;
 
 import java.io.Serializable;
 import java.util.Arrays;

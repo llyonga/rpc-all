@@ -1,4 +1,4 @@
-package cn.llyong.rpc.bo;
+package cn.llyong.rpc.common.bo;
 
 import java.io.Serializable;
 

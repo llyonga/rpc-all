@@ -1,4 +1,4 @@
-package cn.llyong.rpc.bo;
+package cn.llyong.rpc.common.bo;
 
 import lombok.Builder;
 import lombok.Data;
